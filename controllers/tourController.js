@@ -6,15 +6,23 @@ const Tour = require('../models/tourModels');
 // );
 
 //Tours Handlers
-exports.getAllTours = (req, res) => {
-  console.log(req.requestTime);
-  res.status(200).json({
-    status: 'Success',
-    // requestAt: req.requestTime,
-    // data: {
-    //   tours,
-    // },
-  });
+exports.getAllTours = async (req, res) => {
+  try {
+    const tours = await Tour.find();
+
+    res.status(200).json({
+      status: 'Success',
+      result: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.Send(404).json({
+      status: 'Failed to retrieve tours',
+      message: err,
+    });
+  }
 };
 
 exports.createTour = async (req, res) => {
@@ -34,33 +42,49 @@ exports.createTour = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'Failed to create tour',
+      message: 'Invalid Data sent',
+    });
+  }
+};
+
+exports.getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    //Tour.findOne({_id: req.params.id})
+
+    res.status(200).json({
+      status: 'Success',
+      data: {
+        tour: tour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'Failed to find tour',
       message: err,
     });
   }
 };
 
-exports.getTour = (req, res) => {
-  console.log(req.params);
-  const id = req.params.id * 1;
-
-  // const tour = tours.find((el) => el.id === id);
-
-  // res.status(200).json({
-  //   status: 'Success',
-  //   data: {
-  //     tour: tour,
-  //   },
-  // });
-};
-
-exports.updateTour = (req, res) => {
-  res.status(200).json({
-    status: 'Success',
-    message: 'Tour updated successfully',
-    data: {
-      tour: 'Update successfully',
-    },
-  });
+exports.updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json({
+      status: 'Success',
+      message: 'Tour updated successfully',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'Failed to find tour',
+      message: err,
+    });
+  }
 };
 
 exports.deleteTour = (req, res) => {
