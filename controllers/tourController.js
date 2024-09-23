@@ -1,3 +1,4 @@
+const { query } = require('express');
 const Tour = require('../models/tourModels');
 
 // Mock data for testing use Json file
@@ -8,8 +9,29 @@ const Tour = require('../models/tourModels');
 //Tours Handlers
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    //BUILD QUERY
+    //1. Filtering
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((el) => delete queryObj[el]);
+    console.log(req.query, queryObj);
 
+    //2. Advanced Filtering
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    console.log(JSON.parse(queryStr));
+
+    const query = Tour.find(JSON.parse(queryStr));
+
+    // EXECUTE QUERY
+    const tours = await query;
+
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .equals(5)
+    //   .where('difficulty')
+    //   .equals('easy');
+    //SEND RESPONSE
     res.status(200).json({
       status: 'Success',
       result: tours.length,
@@ -18,7 +40,7 @@ exports.getAllTours = async (req, res) => {
       },
     });
   } catch (err) {
-    res.Send(404).json({
+    res.status(404).json({
       status: 'Failed to retrieve tours',
       message: err,
     });
@@ -97,7 +119,7 @@ exports.deleteTour = async (req, res) => {
       data: null,
     });
   } catch (err) {
-    res.Send(400).json({
+    res.status(400).json({
       status: 'Failed to delete tour',
       message: err,
     });
