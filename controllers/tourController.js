@@ -83,6 +83,7 @@ exports.getTour = async (req, res) => {
 
 exports.updateTour = async (req, res) => {
   try {
+    console.log(req.body);
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -150,6 +151,40 @@ exports.getTourStats = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'Failed to delete tour',
+      message: err,
+    });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      // {
+      //   $match: {
+      //     startDates: {
+      //       $gte: new Date(`${year}-01-01,00:00`),
+      //       $lte: new Date(`${year}-12-31,00:00`),
+      //     },
+      //     //  difficulty: req.query.difficulty,
+      //   },
+      // },
+    ]);
+    console.log(plan[0]);
+    res.status(200).json({
+      status: 'Success',
+      message: 'Stats calculated successfully',
+      data: {
+        plan,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed to calculate tour Stats',
       message: err,
     });
   }
