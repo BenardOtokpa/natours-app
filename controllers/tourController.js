@@ -118,3 +118,17 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = Tour.aggregate([
+      
+    ])
+
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed to delete tour',
+      message: err,
+    });
+  }
+}
