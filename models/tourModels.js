@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 //MODELS
 const tourSchema = new mongoose.Schema(
@@ -57,6 +58,10 @@ const tourSchema = new mongoose.Schema(
 
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+//Document Middleware: runs before .save() or .create()
+tourSchema.pre('save', function () {
+  this.;
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
