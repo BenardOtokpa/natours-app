@@ -164,17 +164,56 @@ exports.getMonthlyPlan = async (req, res) => {
       {
         $unwind: '$startDates',
       },
-      // {
-      //   $match: {
-      //     startDates: {
-      //       $gte: new Date(`${year}-01-01,00:00`),
-      //       $lte: new Date(`${year}-12-31,00:00`),
-      //     },
-      //     //  difficulty: req.query.difficulty,
-      //   },
-      // },
+      {
+        $addFields: {
+          startDateConverted: {
+            $dateFromString: {
+              dateString: {
+                $concat: [
+                  { $substr: ['$startDates', 0, 10] }, // Extract the 'YYYY-MM-DD' part
+                  'T',
+                  { $substr: ['$startDates', 11, 5] }, // Extract the 'HH:MM' part
+                  ':00Z', // Add seconds and UTC timezone
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      {
+        $match: {
+          startDateConverted: {
+            $gte: new Date(`${year}-01-01T00:00:00Z`),
+            $lte: new Date(`${year}-12-31T23:59:59Z`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $month: '$startDateConverted',
+          },
+          numOfTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        $addFields: {
+          month: '$_id',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          numOfTourStarts: -1,
+        },
+      },
     ]);
-    console.log(plan[0]);
     res.status(200).json({
       status: 'Success',
       message: 'Stats calculated successfully',
