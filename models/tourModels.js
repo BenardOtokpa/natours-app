@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 //MODELS
 const tourSchema = new mongoose.Schema(
@@ -10,7 +11,7 @@ const tourSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       maxlength: [40, 'Tour name must have less or equal than 40 characters'],
-      minlength: [10, 'Tour name must have more or equal than 10 characters'],
+      minlength: [10, 'Tour name must have more or equal than 10 characters']
     },
     slug: String,
     duration: {
@@ -44,6 +45,7 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       validate: {
         validator: function (val) {
+          //this only points to current doc on the NEW document creation
           return val < this.price;
         },
         message:
