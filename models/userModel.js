@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please provide a name'],
-    unique: true,
+    required: [true, 'Please provide your name'],
     minlength: [3, 'Name must be between 3 and 50 characters'],
     maxlength: [50, 'Name must be between 3 and 50 characters'],
   },
@@ -12,10 +13,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide an email'],
     unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please provide a valid email address',
-    ],
+    validate: [validator.isEmail, 'Please provide a valid email'],
+    lowercase: true,
   },
   password: {
     type: String,
@@ -25,8 +24,30 @@ const userSchema = new mongoose.Schema({
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'],
+    validate: {
+      //this only works on CREATE n SAVE!!
+      validator: function (el) {
+        return el === this.password;
+      },
+      message: 'Passwords do not match! ',
+    },
   },
-  photo: {
-    type: String,
-  },
+  photo: String,
 });
+
+// pre-save middleware
+userSchema.pre('save', async function (next) {
+  //run function if password was modified
+  if (!this.isModified('password')) return next();
+
+  //hash the password before saving with cost of 12
+  this.password = await bcrypt.hash(this.password, 12);
+
+  // delete passwordConfirm field to prevent saving it in the database
+  this.passwordConfirm = undefined;
+  next();
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
