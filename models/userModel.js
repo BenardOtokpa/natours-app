@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
     minlength: [8, 'Password must be at least 8 characters long'],
     select: false, //hide this field in queries
   },
+
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'],
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema({
     },
   },
   photo: String,
+  passwordChangeAt: Date,
 });
 
 // pre-save middleware
@@ -54,6 +56,19 @@ userSchema.methods.correctPassword = async function (
   userPassword,
 ) {
   return await bcrypt.compare(canditaePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangeAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangeAt.getTime() / 1000,
+      10,
+    );
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  //false means not changed password
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);
