@@ -107,40 +107,49 @@ exports.restrictTo = (...roles) => {
 };
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
-  //get user from POSTed email address
+  // 1. Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
     return next(new AppError('No user found with that email', 404));
   }
 
-  //generate random token
+  // 2. Generate random reset token
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  //send reset token to user's email
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users.resetPassword/${resetToken}`;
-
-  const message = `Forgot your password? Submit a PATCH request with your new password and confirmPasswordto ${resetURL}.\nIf you didnt forget your password, please ignore this email!.`;
+  // 3. Create reset URL and message
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
   try {
+    // 4. Send reset token via email
     await sendEmail({
       email: user.email,
-      subject: 'Password reset token (valid for 10 minutes)',
+      subject: 'Your password reset token (valid for 10 minutes)',
       message,
     });
 
-    res.status(200).json({
+    // 5. Send success response if email sent
+    return res.status(200).json({
       status: 'success',
-      message: 'Token sent to email',
+      message: 'Token sent to email!',
     });
-  } catch (e) {
+  } catch (err) {
+    // 6. If there's an error, clear the token and expiration
     user.passwordResetToken = undefined;
-    user.passwordResetExpiresAt = undefined;
+    user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
+
+    // 7. Send error response
+    return next(
+      new AppError(
+        'There was an error sending the email. Try again later',
+        500,
+      ),
+    );
   }
-  return next(
-    new AppError('There was an error sending the email. Try again later', 500),
-  );
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = (req, res, next) => {
+  //
+};
