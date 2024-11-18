@@ -2,6 +2,22 @@ const catchAsync = require('../utils/catchAsync');
 const User = require('./../models/userModel');
 
 //Users Handllers
+exports.updateMe = (req, res, next) => {
+  //create error if user post pasword data
+  if (req.body.password || req.body.PasswordConfirm) {
+    return next(
+      new AppError(
+        'This route is not for password Update, Please use /updateMyPassword.',
+        400,
+      ),
+    );
+  }
+  //update user document
+  response.status(200).json({
+    status: 'success',
+  });
+};
+
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find();
 
