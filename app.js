@@ -1,6 +1,9 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -10,7 +13,10 @@ const userRouter = require('./routes/userRoutes');
 const app = express();
 
 // Global Middlewares
+//set security HTTP options
+app.use(helmet());
 
+// Logging middleware for development environment
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -23,13 +29,22 @@ const limiter = rateLimit({
 });
 
 app.use('/api', limiter);
-app.use(express.json());
 
+//body parsing data from the body into the req.body
+app.use(express.json({ limit: '10kb' }));
+
+//Data sanitization against NoSQL injection
+app.use(mongoSanitize());
+
+//Data sanitization against cross site scripting attatcks
+app.use(xss());
+
+// Serving static files from the public folder
 app.use(express.static(`${__dirname}/public`));
 
+//test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  // console.log(req.headers);
   next();
 });
 
