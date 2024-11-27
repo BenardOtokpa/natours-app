@@ -4,7 +4,7 @@ const validator = require('validator');
 const reviewSchema = new mongoose.Schema(
   {
     review: {
-      typeof: String,
+      type: String,
       required: [true, 'Review field is required'],
       maxlength: [500, 'Review must be less than or equal to 500 characters'],
     },
