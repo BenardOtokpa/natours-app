@@ -1,6 +1,7 @@
 const catchAsync = require('../utils/catchAsync');
 const User = require('./../models/userModel');
 
+const factory = require('./handlerFactory');
 const AppError = require('./../utils/appError');
 
 const filterObj = (obj, ...allowedFields) => {
@@ -78,9 +79,4 @@ exports.updateUser = (req, res) => {
     message: 'This route is not yet Implimented!',
   });
 };
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'Error',
-    message: 'This route is not yet Implimented!',
-  });
-};
+exports.deleteUser = factory.deleteOne(User);
