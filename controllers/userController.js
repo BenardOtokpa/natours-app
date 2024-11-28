@@ -12,6 +12,8 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 //Users Handllers
+//update user document
+//filtered out unwanted fields
 exports.updateMe = catchAsync(async (req, res, next) => {
   //create error if user post pasword data
   if (req.body.password || req.body.passwordConfirm) {
@@ -22,8 +24,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       ),
     );
   }
-  //update user document
-  //filtered out unwanted fields
   const filteredBody = filterObj(req.body, 'name', 'email');
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
@@ -53,7 +53,10 @@ exports.createUser = (req, res) => {
     message: 'This route is not define! Please use /signup instead',
   });
 };
-
+exports.getMe = (req,res, next) => {
+  req.params.id = req.user.id;
+  next();
+}
 exports.getAllUsers = factory.getAll(User);
 exports.getUser = factory.getOne(User);
 exports.updateUser = factory.updateOne(User);
