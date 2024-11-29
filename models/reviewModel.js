@@ -42,19 +42,16 @@ const reviewSchema = new mongoose.Schema(
 
 //Query Methods
 reviewSchema.pre(/^find/, function (next) {
-  //   this.populate({
-  //     path: 'tour',
-  //     select: 'name',
-  //   }).populate({
-  //     path: 'user',
-  //     select: 'name photo',
-  //   });
   this.populate({
     path: 'user',
     select: 'name photo',
   });
   next();
 });
+
+reviewSchema.calcAverageRating = function (tour) {
+  this.aggregate()
+}
 
 const Review = mongoose.model('Review', reviewSchema);
 
