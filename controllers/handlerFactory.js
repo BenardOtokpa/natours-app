@@ -81,6 +81,7 @@ exports.getAll = (Model) =>
       .sort()
       .limitFields()
       .Paginate();
+    // const doc = await features.query.explain();
     const doc = await features.query;
 
     //SEND RESPONSE
