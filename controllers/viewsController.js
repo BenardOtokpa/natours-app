@@ -9,12 +9,26 @@ exports.getOverview = catchAsync(async (req, res, next) => {
   //render that tamplate using data from above
   res.status(200).render('overview', {
     title: 'All Tours',
-    tours
+    tours,
   });
 });
 
-exports.getTour = (req, res) => {
+exports.getTour = catchAsync(async (req, res, next) => {
+  // get data for requested tour (incluidng reviews and tour guides)
+  const slug = req.params.slug;
+
+  const tour = await Tour.findOne({ slug: slug }).populate({
+    path: 'reviews',
+    fields: 'user rating review',
+  });
+  if (!tour) {
+    return next(new AppError('No tour found with that id', 404));
+  }
+  // build template
+
+  //render the template with this data
   res.status(200).render('tour', {
     title: 'The forest hiker',
+    tour,
   });
-};
+});
