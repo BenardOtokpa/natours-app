@@ -376,7 +376,7 @@ body {
     to(#28b487)
   );
   background-image: linear-gradient(to right bottom, #7dd56f, #28b487);
-  opacity: 0.85;
+  opacity: 0.65;
 }
 
 .heading-box {
@@ -401,6 +401,7 @@ body {
   justify-content: center;
 }
 .heading-box__detail {
+  color: #f7f7f7;
   font-size: 1.5rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -414,6 +415,7 @@ body {
 }
 .heading-box__detail svg {
   margin-right: 0.8rem;
+  color: #f7f7f7;
 }
 .heading-box__detail:not(:last-child) {
   margin-right: 4rem;
