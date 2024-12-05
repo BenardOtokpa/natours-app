@@ -23,7 +23,14 @@ app.set('views', path.join(__dirname, './views'));
 // Serving static files from the public folder
 app.use(express.static(path.join(__dirname, '/public')));
 //set security HTTP options
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
+      scriptSrc: ["'self'", 'https://*.mapbox.com', "'unsafe-inline'", 'blob:'],
+    },
+  }),
+);
 
 // Logging middleware for development environment
 if (process.env.NODE_ENV === 'development') {
