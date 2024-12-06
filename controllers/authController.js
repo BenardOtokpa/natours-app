@@ -64,6 +64,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //3. if everything is ok,send token to client
+  const token = signToken(user._id);
   createSendToken(user, 200, res);
 });
 
@@ -75,6 +76,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   if (!token) {
     return next(
