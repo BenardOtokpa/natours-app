@@ -69,6 +69,19 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'Logged out', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+  });
+  res.status(200).json({
+    status: 'success',
+    message: 'You have been logged out successfully.',
+  });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   //1.get token and check if it exist
   let token;
@@ -110,33 +123,37 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 //only for rendered pages & no errors
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   //1.get token and check if it exist
+  try {
+    if (req.cookies.jwt) {
+      //2. Verification of the token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
+      );
 
-  if (req.cookies.jwt) {
-    //2. Verification of the token
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET,
-    );
+      //3.check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
 
-    //3.check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+      //4. check if user changed password after token was created
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      //GRANT ACCESSS if logged in user
+      res.locals.user = currentUser;
       return next();
     }
-
-    //4. check if user changed password after token was created
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    //GRANT ACCESSS if logged in user
-    res.locals.user = currentUser;
+  } catch (err) {
     return next();
   }
+
   next();
-});
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
