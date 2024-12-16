@@ -35,6 +35,7 @@ const createSendToken = (user, statusCode, res) => {
     },
   });
 };
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -113,7 +114,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
   //1.get token and check if it exist
 
   if (req.cookies.jwt) {
-    //2. Verification the token
+    //2. Verification of the token
     const decoded = await promisify(jwt.verify)(
       req.cookies.jwt,
       process.env.JWT_SECRET,
