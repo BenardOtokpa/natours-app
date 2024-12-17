@@ -28,12 +28,10 @@ const handleJWTExpiredError = () => {
 };
 
 const sendErrorDev = (err, req, res) => {
-  const statusCode = err.statusCode || 500; // Default to 500 (Internal Server Error)
-  const status = err.status || 'error';
   // A) API
-  if (req.originalUrl && req.originalUrl.startsWith('/api')) {
-    return res.status(statusCode).json({
-      status,
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
       error: err,
       message: err.message,
       stack: err.stack,
@@ -42,29 +40,44 @@ const sendErrorDev = (err, req, res) => {
 
   // B) RENDERED WEBSITE
   console.error('ERROR 💥', err);
-  return res.status(statusCode).render('error', {
+  return res.status(err.statusCode).render('error', {
     title: 'Something went wrong!',
     msg: err.message,
   });
 };
 
-const sendErrorProd = (err, res) => {
-  //Operational error, trusted error: send to the client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-
-    //Programming or other unknown error: dont send to client error
-  } else {
+const sendErrorProd = (err, req, res) => {
+  //A.API
+  if (req.originalUrl.startsWith('/api')) {
+    //A. Operational error, trusted error: send to the client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
+    //B. Programming or other unknown error: dont send to client error
     console.error('🔥🔥Error:', err);
     //send generic error message to client
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'Something went wrong!',
     });
   }
+  //B. Rendered Websites
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
+  //Programming or other unknown error: dont send to client error
+  console.error('🔥🔥Error:', err);
+  //send generic error message to client
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later',
+  });
 };
 
 // Global error handling middleware
@@ -73,7 +86,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production ') {
     let error = Object.create(err);
 
@@ -83,6 +96,6 @@ module.exports = (err, req, res, next) => {
       error = handleValidationErrorDB(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
