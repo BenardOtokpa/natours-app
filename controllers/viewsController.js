@@ -44,4 +44,7 @@ exports.getAccount = (req, res) => {
   res.status(200).render('account', {
     title: 'Your Account',
   });
-}
+};
+exports.updateUserData = (req, res) => {
+  console.log('updating', req.body);
+};

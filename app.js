@@ -8,6 +8,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+// const methodOverride = require('method-override');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -48,6 +49,8 @@ app.use(
     credentials: true, // Allow credentials (e.g., cookies)
   }),
 );
+//Setting for method override in Express
+// app.use(methodOverride('_method'));
 
 // Logging middleware for development environment
 if (process.env.NODE_ENV === 'development') {
@@ -66,6 +69,7 @@ app.use('/api', limiter);
 //body parsing data from the body into the req.body
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 //Data sanitization against NoSQL injection
 app.use(mongoSanitize());
@@ -89,7 +93,7 @@ app.use(
 
 //test middleware
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();  
+  req.requestTime = new Date().toISOString();
   console.log(req.cookies);
   next();
 });
