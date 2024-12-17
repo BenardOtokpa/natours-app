@@ -27,12 +27,24 @@ const handleJWTExpiredError = () => {
   return new AppError(message, 401);
 };
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
+const sendErrorDev = (err, req, res) => {
+  const statusCode = err.statusCode || 500; // Default to 500 (Internal Server Error)
+  const status = err.status || 'error';
+  // A) API
+  if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+    return res.status(statusCode).json({
+      status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+
+  // B) RENDERED WEBSITE
+  console.error('ERROR 💥', err);
+  return res.status(statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: err.message,
   });
 };
 
